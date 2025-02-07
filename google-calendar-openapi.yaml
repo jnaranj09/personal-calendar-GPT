@@ -1,0 +1,380 @@
+openapi: 3.1.0
+info:
+  title: Google Calendar API
+  description: This API allows you to read, create, update, and delete events in a user's Google Calendar.
+  version: 1.0.0
+servers:
+  - url: https://www.googleapis.com/calendar/v3
+    description: Google Calendar API server
+paths:
+  /calendars/primary/events:
+    get:
+      summary: List events from the primary calendar
+      description: Retrieve a list of events from the user's primary Google Calendar.
+      operationId: listEvents
+      tags:
+        - Calendar
+      parameters:
+        - name: timeMin
+          in: query
+          description: The lower bound (inclusive) of the events to retrieve, in RFC3339 format.
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-11-01T00:00:00Z
+        - name: timeMax
+          in: query
+          description: The upper bound (exclusive) of the events to retrieve, in RFC3339 format.
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-12-01T00:00:00Z
+        - name: maxResults
+          in: query
+          description: The maximum number of events to return.
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: singleEvents
+          in: query
+          description: Whether to expand recurring events into instances. Defaults to `false`.
+          required: false
+          schema:
+            type: boolean
+            default: true
+        - name: orderBy
+          in: query
+          description: The order of events. Can be "startTime" or "updated".
+          required: false
+          schema:
+            type: string
+            enum:
+              - startTime
+              - updated
+            default: startTime
+      responses:
+        "200":
+          description: A list of events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: The event ID
+                        summary:
+                          type: string
+                          description: The event summary (title)
+                        start:
+                          type: object
+                          properties:
+                            dateTime:
+                              type: string
+                              format: date-time
+                              description: The start time of the event
+                            date:
+                              type: string
+                              format: date
+                              description: The start date of the all-day event
+                        end:
+                          type: object
+                          properties:
+                            dateTime:
+                              type: string
+                              format: date-time
+                              description: The end time of the event
+                            date:
+                              type: string
+                              format: date
+                              description: The end date of the all-day event
+                        location:
+                          type: string
+                          description: The location of the event
+                        description:
+                          type: string
+                          description: A description of the event
+        "400":
+          description: Bad request, invalid parameters
+        "401":
+          description: Unauthorized access due to missing or invalid OAuth token
+    post:
+      summary: Create a new event on the primary calendar
+      description: Creates a new event on the user's primary Google Calendar.
+      operationId: createEvent
+      tags:
+        - Calendar
+      requestBody:
+        description: The event data to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                summary:
+                  type: string
+                  description: The title of the event
+                  example: Team Meeting
+                location:
+                  type: string
+                  description: The location of the event
+                  example: Conference Room 1
+                description:
+                  type: string
+                  description: A detailed description of the event
+                  example: Discuss quarterly results
+                start:
+                  type: object
+                  properties:
+                    dateTime:
+                      type: string
+                      format: date-time
+                      description: Start time of the event
+                      example: 2024-11-30T09:00:00Z
+                    timeZone:
+                      type: string
+                      description: Time zone of the event start
+                      example: UTC
+                end:
+                  type: object
+                  properties:
+                    dateTime:
+                      type: string
+                      format: date-time
+                      description: End time of the event
+                      example: 2024-11-30T10:00:00Z
+                    timeZone:
+                      type: string
+                      description: Time zone of the event end
+                      example: UTC
+                attendees:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      email:
+                        type: string
+                        description: The email address of an attendee
+                        example: attendee@example.com
+              required:
+                - summary
+                - start
+                - end
+      responses:
+        "201":
+          description: Event created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: The ID of the created event
+                  summary:
+                    type: string
+                    description: The event summary (title)
+                  start:
+                    type: object
+                    properties:
+                      dateTime:
+                        type: string
+                        format: date-time
+                        description: The start time of the event
+                  end:
+                    type: object
+                    properties:
+                      dateTime:
+                        type: string
+                        format: date-time
+                        description: The end time of the event
+        "400":
+          description: Bad request, invalid event data
+        "401":
+          description: Unauthorized access due to missing or invalid OAuth token
+        "500":
+          description: Internal server error
+  /calendars/primary/events/{eventId}:
+    put:
+      summary: Update an event on the primary calendar
+      description: Updates the specified event on the user's primary Google Calendar.
+      operationId: updateEvent
+      tags:
+        - Calendar
+      parameters:
+        - name: eventId
+          in: path
+          description: The event identifier.
+          required: true
+          schema:
+            type: string
+            example: event-id-123
+        - name: sendUpdates
+          in: query
+          description: |
+            Indicates whether guests should be notified of the event updates. Acceptable values are:
+              - `all` – Notify all guests.
+              - `externalOnly` – Notify only guests who are not part of the domain.
+              - `none` – Do not send notifications.
+          required: false
+          schema:
+            type: string
+            enum:
+              - all
+              - externalOnly
+              - none
+      requestBody:
+        description: The event data to update.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                summary:
+                  type: string
+                  description: The title of the event
+                  example: Updated Team Meeting
+                location:
+                  type: string
+                  description: The location of the event
+                  example: Conference Room 2
+                description:
+                  type: string
+                  description: A detailed description of the event
+                  example: Discuss updated quarterly results
+                start:
+                  type: object
+                  properties:
+                    dateTime:
+                      type: string
+                      format: date-time
+                      description: Start time of the event
+                      example: 2024-11-30T09:00:00Z
+                    timeZone:
+                      type: string
+                      description: Time zone of the event start
+                      example: UTC
+                end:
+                  type: object
+                  properties:
+                    dateTime:
+                      type: string
+                      format: date-time
+                      description: End time of the event
+                      example: 2024-11-30T10:00:00Z
+                    timeZone:
+                      type: string
+                      description: Time zone of the event end
+                      example: UTC
+                attendees:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      email:
+                        type: string
+                        description: The email address of an attendee
+                        example: attendee@example.com
+                reminders:
+                  type: object
+                  properties:
+                    useDefault:
+                      type: boolean
+                      default: false
+                    overrides:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          method:
+                            type: string
+                          minutes:
+                            type: integer
+              required:
+                - start
+                - end
+      responses:
+        "200":
+          description: Event updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: The ID of the updated event
+                  summary:
+                    type: string
+                    description: The event summary (title)
+                  start:
+                    type: object
+                    properties:
+                      dateTime:
+                        type: string
+                        format: date-time
+                        description: The start time of the event
+                  end:
+                    type: object
+                    properties:
+                      dateTime:
+                        type: string
+                        format: date-time
+                        description: The end time of the event
+        "400":
+          description: Bad request, invalid event data.
+        "401":
+          description: Unauthorized access due to missing or invalid OAuth token.
+        "404":
+          description: The specified event was not found.
+        "500":
+          description: Internal server error.
+    delete:
+      summary: Delete an event from the primary calendar
+      description: Deletes the specified event from the user's primary Google Calendar.
+      operationId: deleteEvent
+      tags:
+        - Calendar
+      parameters:
+        - name: eventId
+          in: path
+          description: The event identifier.
+          required: true
+          schema:
+            type: string
+            example: event-id-123
+        - name: sendUpdates
+          in: query
+          description: |
+            Indicates whether guests should be notified of the event cancellation. Acceptable values are:
+              - `all` – Notify all guests.
+              - `externalOnly` – Notify only guests who are not part of the domain.
+              - `none` – Do not send notifications.
+          required: false
+          schema:
+            type: string
+            enum:
+              - all
+              - externalOnly
+              - none
+      responses:
+        "204":
+          description: Event deleted successfully. No content is returned.
+        "400":
+          description: Bad request, invalid parameters.
+        "401":
+          description: Unauthorized access due to missing or invalid OAuth token.
+        "404":
+          description: The specified event was not found.
+        "500":
+          description: Internal server error.
