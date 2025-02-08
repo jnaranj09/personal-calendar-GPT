@@ -165,8 +165,22 @@ paths:
                         type: string
                         description: The email address of an attendee
                         example: attendee@example.com
+                reminders:
+                  type: object
+                  properties:
+                    useDefault:
+                      type: boolean
+                      default: false
+                    overrides:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          method:
+                            type: string
+                          minutes:
+                            type: integer
               required:
-                - summary
                 - start
                 - end
       responses:
